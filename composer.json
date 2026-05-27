@@ -5,7 +5,13 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "app/"
-        }
+            "App\\Core\\": "app/core/",
+            "App\\Controllers\\": "app/controllers/",
+            "App\\Models\\": "app/models/",
+            "App\\Middleware\\": "app/middleware/"
+        },
+        "files": [
+            "app/helpers/helpers.php"
+        ]
     }
 }
