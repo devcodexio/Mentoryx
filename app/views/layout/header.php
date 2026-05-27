@@ -3,8 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($title ?? 'Simulador de Exámenes') ?></title>
-    <meta name="description" content="Simulador de exámenes de admisión. Practica con los exámenes reales de años anteriores y revisa resoluciones detalladas.">
+    <title><?= htmlspecialchars($title ?? 'Mentoryx | Simulador de Exámenes UNSCH') ?></title>
+    <meta name="description" content="Mentoryx - El mejor simulador de exámenes de admisión para la UNSCH. Practica con los exámenes reales de años anteriores, evalúa tu nivel y revisa resoluciones detalladas al instante.">
+    <meta name="keywords" content="examen de la unsch, examen de admision, simulador de examen, mentoryx, unsch, san cristobal de huamanga, preparacion universitaria, examenes resueltos unsch">
+    <meta name="author" content="Mentoryx">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph (Facebook/WhatsApp/LinkedIn) -->
+    <meta property="og:title" content="Mentoryx | Simulador de Exámenes UNSCH">
+    <meta property="og:description" content="Practica con exámenes de admisión reales de la UNSCH y evalúa tu nivel con nuestro simulador.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sistemas-per.com">
+    <meta property="og:site_name" content="Mentoryx">
 
     <!-- Preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

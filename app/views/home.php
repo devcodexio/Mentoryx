@@ -27,11 +27,11 @@
 
             <h1 class="hero-title">
                 Prepárate para el<br>
-                <span class="gradient-text">Examen de Admisión</span>
+                <span class="gradient-text">Examen de Admisión UNSCH</span>
             </h1>
 
             <p class="hero-subtitle">
-                Practica con exámenes reales de años anteriores. Responde, califica y revisa cada resolución al instante.
+                <strong>Mentoryx</strong> es el mejor simulador de exámenes. Practica con los exámenes de admisión reales de la <strong>UNSCH</strong> de años anteriores. Responde, califica y aprueba.
             </p>
 
             <div class="hero-cta">
@@ -64,7 +64,7 @@
         <div class="section-header">
             <h2 class="section-title">
                 <i class="fas fa-calendar-alt" style="color: var(--primary-light); font-size: 1rem; margin-right: 8px;"></i>
-                Exámenes por Año
+                Exámenes de Admisión UNSCH
             </h2>
             <span class="section-count"><?= count($categories ?? []) ?> disponibles</span>
         </div>
