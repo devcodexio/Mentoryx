@@ -3,3 +3,5 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home1/angeloay/public_html/
     - /usr/bin/rsync -av --delete --exclude=".git" ./ $DEPLOYPATH
+    - find $DEPLOYPATH -type d -exec chmod 755 {} \;
+    - find $DEPLOYPATH -type f -exec chmod 644 {} \;
