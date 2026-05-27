@@ -28,11 +28,11 @@ class Database {
 
     public static function getConnection() {
         if (self::$instance === null) {
-            self::loadEnv();
+            $config = require dirname(__DIR__, 2) . '/config/database.php';
             
             try {
-                $dsn = "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_NAME']};charset={$_ENV['DB_CHARSET']}";
-                self::$instance = new PDO($dsn, $_ENV['DB_USER'], $_ENV['DB_PASS'], [
+                $dsn = "mysql:host={$config['host']};dbname={$config['db']};charset={$config['charset']}";
+                self::$instance = new PDO($dsn, $config['user'], $config['pass'], [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_EMULATE_PREPARES => false,
