@@ -90,6 +90,9 @@
                 <li class="sidebar-item <?= str_contains($uri, 'configuracion') ? 'active' : '' ?>">
                     <a href="/admin/configuracion" title="Configuración"><i class="fas fa-cogs"></i> <span class="sidebar-text">Configuración</span></a>
                 </li>
+                <li class="sidebar-item <?= str_contains($uri, 'perfil') ? 'active' : '' ?>">
+                    <a href="/admin/perfil" title="Mi Perfil"><i class="fas fa-user-edit"></i> <span class="sidebar-text">Mi Perfil</span></a>
+                </li>
                 <li class="sidebar-item">
                     <a href="/" target="_blank" title="Ver Web"><i class="fas fa-arrow-up-right-from-square"></i> <span class="sidebar-text">Ver Web</span></a>
                 </li>
@@ -186,12 +189,17 @@
                             </div>
                         </div>
                     </div>
-                    <div class="admin-user-info">
-                        <i class="fas fa-circle-user"></i>
+                    <div class="admin-user-info" style="gap: 8px;">
                         <?php
                             $adminData = \App\Core\Session::get('admin');
-                            echo htmlspecialchars($adminData['username'] ?? 'Admin');
+                            $nombre = $adminData['nombre'] ?? $adminData['username'] ?? 'Admin';
+                            if (!empty($adminData['foto'])):
                         ?>
+                            <img src="/uploads/<?= htmlspecialchars($adminData['foto']) ?>" alt="User" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">
+                        <?php else: ?>
+                            <i class="fas fa-circle-user" style="font-size: 1.2rem;"></i>
+                        <?php endif; ?>
+                        <span><?= htmlspecialchars($nombre) ?></span>
                     </div>
                 </div>
             </header>

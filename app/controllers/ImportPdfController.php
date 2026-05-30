@@ -56,85 +56,173 @@ class ImportPdfController {
             // Reemplazar saltos de línea extraños y unificar
             $text = str_replace(["\r\n", "\r"], "\n", $text);
             
-            // Dividir por números de pregunta (ej. "1.", "2.", "120.")
-            $blocks = preg_split('/(?<=\n|^)\s*\d+\.\s+/', "\n" . $text);
+            $questionsData = [];
 
-            foreach ($blocks as $block) {
-                $block = trim($block);
-                if (empty($block) || strlen($block) < 5) continue;
-                
-                $lines = explode("\n", $block);
-                $questionText = "";
-                $alternativesRaw = [];
-                $respuestaCorrecta = null;
-                $resolucion = "Importado desde PDF";
-                
-                foreach ($lines as $line) {
-                    $line = trim($line);
-                    if (empty($line)) continue;
+            // 1. Detectar si es el formato exportado por el sistema
+            if (strpos($text, 'Respuestas Correctas y Resoluciones Detalladas') !== false || preg_match('/Pregunta \d+:/', $text)) {
+                $parts = explode('Respuestas Correctas y Resoluciones Detalladas', $text);
+                $questionsPart = $parts[0];
+                $resolutionsPart = $parts[1] ?? '';
+
+                // Extraer preguntas
+                $qBlocks = preg_split('/Pregunta (\d+):/', $questionsPart, -1, PREG_SPLIT_DELIM_CAPTURE);
+                for ($i = 1; $i < count($qBlocks); $i += 2) {
+                    $qNum = trim($qBlocks[$i]);
+                    $qContent = trim($qBlocks[$i+1]);
                     
-                    // Buscar alternativas a), b), c), d) o A., B., C.
-                    if (preg_match('/^[a-eA-E][\.\)]\s+(.*)$/', $line, $matches)) {
-                        $alternativesRaw[] = $matches[1];
-                    } elseif (preg_match('/^Resp(?:uesta)?:\s*([a-eA-E])/i', $line, $matches)) {
-                        $respuestaCorrecta = strtolower($matches[1]);
-                    } elseif (preg_match('/^Resoluci[oó]n:\s*(.*)$/i', $line, $matches)) {
-                        $resolucion = $matches[1];
-                    } else {
-                        if (empty($alternativesRaw)) {
-                            $questionText .= $line . "\n";
+                    $lines = explode("\n", $qContent);
+                    $qText = "";
+                    $alts = [];
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        if (empty($line)) continue;
+                        if (preg_match('/^[a-fA-F][\.\)]\s+(.*)$/', $line, $m)) {
+                            $alts[] = $m[1];
+                        } else {
+                            if (empty($alts) && stripos($line, 'AutoEvaluación') === false && stripos($line, 'Banco de Preguntas') === false && stripos($line, 'Total Preguntas:') === false && stripos($line, 'Fecha:') === false) {
+                                $qText .= $line . "\n";
+                            }
+                        }
+                    }
+                    $questionsData[$qNum] = [
+                        'pregunta' => trim($qText),
+                        'alternativas' => $alts,
+                        'respuestaCorrecta' => null,
+                        'resolucion' => 'Importado desde PDF'
+                    ];
+                }
+
+                // Extraer resoluciones
+                if (!empty($resolutionsPart)) {
+                    $rBlocks = preg_split('/Pregunta\s+(\d+)\s*-\s*Clave:/i', $resolutionsPart, -1, PREG_SPLIT_DELIM_CAPTURE);
+                    for ($i = 1; $i < count($rBlocks); $i += 2) {
+                        $qNum = trim($rBlocks[$i]);
+                        $rContent = trim($rBlocks[$i+1]);
+                        
+                        $lines = explode("\n", $rContent);
+                        $claveLine = trim($lines[0]);
+                        $clave = null;
+                        if (preg_match('/([a-fA-F])[\.\)]/', $claveLine, $m)) {
+                            $clave = strtolower($m[1]);
+                        }
+                        
+                        $resolucion = "";
+                        $inRes = false;
+                        for ($j = 0; $j < count($lines); $j++) {
+                            $line = trim($lines[$j]);
+                            if (preg_match('/Resolución Detallada:/i', $line)) {
+                                $inRes = true;
+                                $line = preg_replace('/Resolución Detallada:/i', '', $line);
+                            }
+                            if ($inRes && trim($line) !== '') {
+                                $resolucion .= trim($line) . "\n";
+                            }
+                        }
+                        
+                        if (isset($questionsData[$qNum])) {
+                            if ($clave) $questionsData[$qNum]['respuestaCorrecta'] = $clave;
+                            if (trim($resolucion)) $questionsData[$qNum]['resolucion'] = trim($resolucion);
                         }
                     }
                 }
-                
-                $questionText = trim($questionText);
-                
-                if (!empty($questionText)) {
-                    $qId = $this->questionModel->create([
-                        'categoria_id' => $categoriaId,
-                        'pregunta' => $questionText,
-                        'imagen' => null,
-                        'resolucion' => $resolucion,
-                        'puntaje' => 1
-                    ]);
+            } else {
+                // 2. Formato estándar o antiguo (ej. "1.", "2.")
+                $blocks = preg_split('/(?<=\n|^)\s*\d+\.\s+/', "\n" . $text);
+                foreach ($blocks as $idx => $block) {
+                    $block = trim($block);
+                    if (empty($block) || strlen($block) < 5) continue;
                     
+                    $lines = explode("\n", $block);
+                    $qText = "";
                     $alts = [];
-                    $letters = ['a','b','c','d','e'];
-                    $correctIndex = -1;
+                    $clave = null;
+                    $resolucion = "";
+                    $inRes = false;
                     
-                    foreach ($alternativesRaw as $idx => $altTxt) {
-                        $isCorrect = false;
-                        if ($respuestaCorrecta && isset($letters[$idx]) && $letters[$idx] === $respuestaCorrecta) {
-                            $isCorrect = true;
-                            $correctIndex = $idx;
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        if (empty($line)) continue;
+                        
+                        if ($inRes) {
+                            $resolucion .= $line . "\n";
+                        } elseif (preg_match('/^[a-eA-E][\.\)]\s+(.*)$/', $line, $matches)) {
+                            $alts[] = $matches[1];
+                        } elseif (preg_match('/^Resp(?:uesta)?:\s*([a-eA-E])/i', $line, $matches)) {
+                            $clave = strtolower($matches[1]);
+                        } elseif (preg_match('/^Resoluci[oó]n:\s*(.*)$/i', $line, $matches)) {
+                            $inRes = true;
+                            if (!empty($matches[1])) {
+                                $resolucion .= $matches[1] . "\n";
+                            }
+                        } else {
+                            if (empty($alts)) {
+                                $qText .= $line . "\n";
+                            }
                         }
-                        $alts[] = [
-                            'alternativa' => trim($altTxt),
-                            'es_correcta' => $isCorrect ? 1 : 0
+                    }
+                    if (empty(trim($resolucion))) $resolucion = "Importado desde PDF";
+                    
+                    if (!empty($qText)) {
+                        $questionsData[] = [
+                            'pregunta' => trim($qText),
+                            'alternativas' => $alts,
+                            'respuestaCorrecta' => $clave,
+                            'resolucion' => trim($resolucion)
                         ];
                     }
-                    
-                    if ($correctIndex === -1 && count($alts) > 0) {
-                         $alts[0]['es_correcta'] = 1;
-                    }
-                    
-                    // Asegurar al menos 4 alternativas si no se extrajeron bien
-                    if (empty($alts)) {
-                         $alts = [
-                             ['alternativa' => 'Verdadero', 'es_correcta' => 1],
-                             ['alternativa' => 'Falso', 'es_correcta' => 0],
-                             ['alternativa' => 'Opción C', 'es_correcta' => 0],
-                             ['alternativa' => 'Opción D', 'es_correcta' => 0],
-                         ];
-                    } elseif (count($alts) < 4) {
-                        while(count($alts) < 4) {
-                            $alts[] = ['alternativa' => 'Opción extra', 'es_correcta' => 0];
-                        }
-                    }
-
-                    $this->alternativeModel->saveAlternatives($qId, $alts);
-                    $questionsCount++;
                 }
+            }
+
+            // Insertar en la base de datos
+            foreach ($questionsData as $qData) {
+                if (empty($qData['pregunta'])) continue;
+
+                $qId = $this->questionModel->create([
+                    'categoria_id' => $categoriaId,
+                    'pregunta' => $qData['pregunta'],
+                    'imagen' => null,
+                    'resolucion' => $qData['resolucion'],
+                    'puntaje' => 1
+                ]);
+                
+                $alts = [];
+                $letters = ['a','b','c','d','e','f'];
+                $correctIndex = -1;
+                $respuestaCorrecta = $qData['respuestaCorrecta'];
+                $alternativesRaw = $qData['alternativas'];
+                
+                foreach ($alternativesRaw as $idx => $altTxt) {
+                    $isCorrect = false;
+                    if ($respuestaCorrecta && isset($letters[$idx]) && $letters[$idx] === $respuestaCorrecta) {
+                        $isCorrect = true;
+                        $correctIndex = $idx;
+                    }
+                    $alts[] = [
+                        'alternativa' => trim($altTxt),
+                        'es_correcta' => $isCorrect ? 1 : 0
+                    ];
+                }
+                
+                if ($correctIndex === -1 && count($alts) > 0) {
+                     $alts[0]['es_correcta'] = 1;
+                }
+                
+                // Asegurar al menos 4 alternativas
+                if (empty($alts)) {
+                     $alts = [
+                         ['alternativa' => 'Verdadero', 'es_correcta' => 1],
+                         ['alternativa' => 'Falso', 'es_correcta' => 0],
+                         ['alternativa' => 'Opción C', 'es_correcta' => 0],
+                         ['alternativa' => 'Opción D', 'es_correcta' => 0],
+                     ];
+                } elseif (count($alts) < 4) {
+                    while(count($alts) < 4) {
+                        $alts[] = ['alternativa' => 'Opción extra', 'es_correcta' => 0];
+                    }
+                }
+
+                $this->alternativeModel->saveAlternatives($qId, $alts);
+                $questionsCount++;
             }
 
             if ($questionsCount > 0) {

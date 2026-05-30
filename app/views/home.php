@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 input: 'text',
                 inputPlaceholder: 'Tu nombre completo...',
                 background: '#1a1a2e',
-                color: '#e2e8f0',
+                color: '#363636',
                 confirmButtonColor: '#6366f1',
                 cancelButtonColor: '#475569',
                 showCancelButton: true,

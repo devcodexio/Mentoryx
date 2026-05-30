@@ -49,6 +49,10 @@ $router->get('/admin/pdfs/descargar/:id', 'PdfController@downloadSaved', [AuthMi
 $router->post('/admin/pdfs/eliminar/:id', 'PdfController@delete', [AuthMiddleware::class]);
 $router->post('/admin/pdfs/bulk-descargar', 'PdfController@bulkDownload', [AuthMiddleware::class]);
 
+// Admin - Profile
+$router->get('/admin/perfil', 'AdminController@profile', [AuthMiddleware::class]);
+$router->post('/admin/perfil', 'AdminController@updateProfile', [AuthMiddleware::class]);
+
 // Admin - Settings
 $router->get('/admin/configuracion', 'SettingController@index', [AuthMiddleware::class]);
 $router->post('/admin/configuracion', 'SettingController@update', [AuthMiddleware::class]);

@@ -452,6 +452,24 @@
     background: var(--danger); border-color: var(--danger); color: white;
 }
 
+/* Results review state for .alternative-card */
+.alternative-card.review-correct {
+    background: rgba(16,185,129,0.06);
+    border-color: var(--success);
+    color: var(--text);
+}
+.alternative-card.review-correct .alternative-letter {
+    background: var(--success); border-color: var(--success); color: white;
+}
+.alternative-card.review-incorrect {
+    background: rgba(239,68,68,0.06);
+    border-color: var(--danger);
+    color: var(--text);
+}
+.alternative-card.review-incorrect .alternative-letter {
+    background: var(--danger); border-color: var(--danger); color: white;
+}
+
 /* =============================================
    EXAM PROGRESS
 ============================================= */

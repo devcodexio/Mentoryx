@@ -55,7 +55,7 @@
                                     <?= htmlspecialchars($q['categoria_nombre']) ?>
                                 </span>
                             </td>
-                            <td style="font-weight: 500; color: #334155; line-height: 1.4;">
+                            <td style="font-weight: 500; color: #f7f5f5ff; line-height: 1.4;">
                                 <?= htmlspecialchars(mb_strimwidth($q['pregunta'], 0, 100, "...")) ?>
                             </td>
                             <td style="text-align: center;">

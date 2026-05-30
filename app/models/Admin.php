@@ -25,4 +25,25 @@ class Admin {
         }
         return false;
     }
+
+    public function findById($id) {
+        $stmt = $this->db->prepare("SELECT id, username, nombre, foto, created_at FROM admins WHERE id = :id LIMIT 1");
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch();
+    }
+
+    public function updateProfile($id, $nombre, $foto = null) {
+        if ($foto !== null) {
+            $stmt = $this->db->prepare("UPDATE admins SET nombre = :nombre, foto = :foto WHERE id = :id");
+            return $stmt->execute(['nombre' => $nombre, 'foto' => $foto, 'id' => $id]);
+        } else {
+            $stmt = $this->db->prepare("UPDATE admins SET nombre = :nombre WHERE id = :id");
+            return $stmt->execute(['nombre' => $nombre, 'id' => $id]);
+        }
+    }
+
+    public function updatePassword($id, $password) {
+        $stmt = $this->db->prepare("UPDATE admins SET password = :password WHERE id = :id");
+        return $stmt->execute(['password' => password_hash($password, PASSWORD_DEFAULT), 'id' => $id]);
+    }
 }
